@@ -1,4 +1,4 @@
-class StreamSocketClient {
+export default class StreamSock {
   /**
    * @param {string|Object} host Either define the host name (and further optional attributes), OR pass in a configuration object
    * @param port
@@ -21,7 +21,7 @@ class StreamSocketClient {
     this._config = {
       client: {
         name: 'sockstream.js',
-        version: 0.1,
+        version: 1.2,
         debugLevel: 0,
         keepAlive: 800
       },
