@@ -20,7 +20,7 @@ class StreamSocketClient {
     this.connections = {};
     this._config = {
       client: {
-        name: 'stream-socket-client.js',
+        name: 'sockstream.js',
         version: 0.1,
         debugLevel: 0,
         keepAlive: 800
@@ -39,7 +39,7 @@ class StreamSocketClient {
           debugLevel: 0,
           keepAlive: 800
         }, host.client, {
-          name: 'stream-socket-client.js',
+          name: 'sockstream.js',
           version: 0.1
         })
       }
@@ -56,7 +56,7 @@ class StreamSocketClient {
     } else {
       this._config = {
         client: {
-          name: 'stream-socket-client.js',
+          name: 'sockstream.js',
           version: 0.1,
           debugLevel: debugLevel,
           keepAlive: keepAlive

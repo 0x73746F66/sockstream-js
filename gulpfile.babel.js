@@ -19,6 +19,10 @@ gulp.task('build', cb =>
   runSequence(['build:js'], cb)
 );
 
+gulp.task('compress', cb =>
+  runSequence(['compress:js'], cb)
+);
+
 gulp.task('build:clean', cb =>
   runSequence('clean', ['build:js'], cb)
 );
@@ -28,21 +32,21 @@ gulp.task('watch', cb =>
 );
 
 gulp.task('clean', ()=> {
-  del(['./build/js']);
+  del(['./build']);
 });
 
 gulp.task('build:js', ()=>
-  gulp.src('./src/js/*.js')
-    .pipe(changed('./build/js', {extension: '.js'}))
+  gulp.src('./src/*.js')
+    .pipe(changed('./build', {extension: '.js'}))
     .pipe(babel({
       presets: ['es2015', 'es2016', 'stage-0']
     }))
-    .pipe(gulp.dest('./build/js'))
+    .pipe(gulp.dest('./build'))
     .pipe(gulpIf(_sync, browserSync.reload({stream: true})))
 );
 
 gulp.task('watch:app', ()=> {
-  gulp.watch(['./src/js/*.js'], ['build:js']);
+  gulp.watch(['./src/*.js'], ['build:js']);
 });
 
 gulp.task('browser-sync', ()=> {
@@ -57,8 +61,8 @@ gulp.task('browser-sync', ()=> {
   });
 });
 
-gulp.task('compress', ()=> {
-  gulp.src('./build/js/*.js')
+gulp.task('compress:js', ()=> {
+  gulp.src('./build/*.js')
     .pipe(minify({
       ext:{
         src:'.js',
