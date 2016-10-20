@@ -21,7 +21,7 @@ export default class StreamSock {
     this._config = {
       client: {
         name: 'sockstream.js',
-        version: 1.2,
+        version: 1.3,
         debugLevel: 0,
         keepAlive: 800
       },
