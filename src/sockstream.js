@@ -141,7 +141,7 @@ export default class StreamSock {
     }
 
     if (this.connections[connectionId].readyState === this.connections[connectionId].OPEN) {
-      let _id = StreamSocketClient.generateUUID()
+      let _id = StreamSock.generateUUID()
       if (typeof cb === 'function') {
         this.callbackRegister[_id] = cb
       }
@@ -165,7 +165,7 @@ export default class StreamSock {
    */
   open(cb) {
     this.console(['[CONNECTING]',`${this._config.server.proto}${this._config.server.hostname}:${this._config.server.port}`], 'info')
-    let connectionId = StreamSocketClient.generateUUID()
+    let connectionId = StreamSock.generateUUID()
     this.lastConnectionId = connectionId
     this.connections[connectionId] = new WebSocket(`${this._config.server.proto}${this._config.server.hostname}:${this._config.server.port}`)
     if (this.connections[connectionId].readyState === this.connections[connectionId].CONNECTING) {
@@ -179,7 +179,7 @@ export default class StreamSock {
         this.console(['WebSocket error', e], 'error')
       }
       this.connections[connectionId].onmessage = e => {
-        let parsed = StreamSocketClient.parseMessage(e.data);
+        let parsed = StreamSock.parseMessage(e.data);
         if (parsed && typeof parsed['@meta'] !== 'undefined') {
           if (typeof this.callbackRegister[parsed['@meta']._type] === 'function') {
             this.callbackRegister[parsed['@meta']._type].call(this._config, parsed['@meta']._system)
