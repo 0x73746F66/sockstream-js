@@ -7,6 +7,15 @@ export default class StreamSock {
    * @param debugLevel
    */
   constructor(host = 'localhost', port = 8082, secure = true, keepAlive = 800, debugLevel = 0) {
+    let clientName = 'sockstream.js';
+    let clientVersion = '1.3.2';
+    let serverName = 'sockets/php-stream-socket-server';
+    let serverVersion = '1.3';
+    let defaultKeepAlive = 800;
+    let defaultDebugLevel = 0;
+    let defaultPort = 8082;
+    let defaultProto = 'wss://';
+    let defaultHost = '127.0.0.1';
     this.callbackRegister = {
       ping: message => {
         this.send('pong')
@@ -20,50 +29,50 @@ export default class StreamSock {
     this.connections = {};
     this._config = {
       client: {
-        name: 'sockstream.js',
-        version: 1.2,
-        debugLevel: 0,
-        keepAlive: 800
+        name: clientName,
+        version: clientVersion,
+        debugLevel: defaultDebugLevel,
+        keepAlive: defaultKeepAlive
       },
       server: {
-        name: 'sockets/php-stream-socket-server',
-        version: 1.3,
-        hostname: 'localhost',
-        port: 8082,
-        proto: 'wss://'
+        name: serverName,
+        version: serverVersion,
+        hostname: defaultHost,
+        port: defaultPort,
+        proto: defaultProto
       }
     }
     if (typeof host === 'object') {
       if (typeof host.client === 'object') {
         this._config.client = Object.assign({
-          debugLevel: 0,
-          keepAlive: 800
+          debugLevel: defaultDebugLevel,
+          keepAlive: defaultKeepAlive
         }, host.client, {
-          name: 'sockstream.js',
-          version: 0.1
+          name: clientName,
+          version: clientVersion
         })
       }
       if (typeof host.server === 'object') {
         this._config.server = Object.assign({
-          hostname: 'localhost',
-          port: 8082,
-          proto: 'wss://'
+          hostname: defaultHost,
+          port: defaultPort,
+          proto: defaultProto
         }, host.server, {
-          name: 'sockets/php-stream-socket-server',
-          version: 1.3
+          name: serverName,
+          version: serverVersion
         })
       }
     } else {
       this._config = {
         client: {
-          name: 'sockstream.js',
-          version: 0.1,
+          name: clientName,
+          version: clientVersion,
           debugLevel: debugLevel,
           keepAlive: keepAlive
         },
         server: {
-          name: 'sockets/php-stream-socket-server',
-          version: 1.3,
+          name: serverName,
+          version: serverVersion,
           hostname: host,
           port: port,
           proto: !!secure ? 'wss://' : 'ws://'
