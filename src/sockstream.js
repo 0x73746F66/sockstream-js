@@ -8,9 +8,7 @@ export default class StreamSock {
    */
   constructor(host = 'localhost', port = 8082, secure = true, keepAlive = 800, debugLevel = 0) {
     let clientName = 'sockstream.js';
-    let clientVersion = '1.3.2';
-    let serverName = 'sockets/php-stream-socket-server';
-    let serverVersion = '1.3';
+    let clientVersion = '1.3.3';
     let defaultKeepAlive = 800;
     let defaultDebugLevel = 0;
     let defaultPort = 8082;
@@ -25,6 +23,8 @@ export default class StreamSock {
         this.console(['[SYSTEM]', message])
       }
     }
+    this.maxKeepAliveAttempt = 20;
+    this.keepAliveAttempt = 0;
     this.disconnect = [];
     this.connections = {};
     this._config = {
@@ -35,8 +35,6 @@ export default class StreamSock {
         keepAlive: defaultKeepAlive
       },
       server: {
-        name: serverName,
-        version: serverVersion,
         hostname: defaultHost,
         port: defaultPort,
         proto: defaultProto
@@ -57,10 +55,7 @@ export default class StreamSock {
           hostname: defaultHost,
           port: defaultPort,
           proto: defaultProto
-        }, host.server, {
-          name: serverName,
-          version: serverVersion
-        })
+        }, host.server)
       }
     } else {
       this._config = {
@@ -71,8 +66,6 @@ export default class StreamSock {
           keepAlive: keepAlive
         },
         server: {
-          name: serverName,
-          version: serverVersion,
           hostname: host,
           port: port,
           proto: !!secure ? 'wss://' : 'ws://'
@@ -89,7 +82,7 @@ export default class StreamSock {
       'warn': 1,
       'error': 0
     }
-    this._config.client.debugLevel >= (levelMap[type]||0) && console[type](message)
+    this._config.client.debugLevel >= (levelMap[type]||0) && console[type](...message)
   }
 
   /**
@@ -176,16 +169,19 @@ export default class StreamSock {
     this.console(['[CONNECTING]',`${this._config.server.proto}${this._config.server.hostname}:${this._config.server.port}`], 'info')
     let connectionId = StreamSock.generateUUID()
     this.lastConnectionId = connectionId
-    this.connections[connectionId] = new WebSocket(`${this._config.server.proto}${this._config.server.hostname}:${this._config.server.port}`)
+    try {
+      this.connections[connectionId] = new WebSocket(`${this._config.server.proto}${this._config.server.hostname}:${this._config.server.port}`)
+    } catch(e){return}
     if (this.connections[connectionId].readyState === this.connections[connectionId].CONNECTING) {
       this.connections[connectionId].onopen = () => {
         this.console('connected', 'info')
+        this.keepAliveAttempt = 0
         setTimeout(() => {
           this.send('connecting', cb)
         }, 20)
       }
       this.connections[connectionId].onerror = e => {
-        this.console(['WebSocket error', e], 'error')
+        this.console(e, 'error')
       }
       this.connections[connectionId].onmessage = e => {
         let parsed = StreamSock.parseMessage(e.data);
@@ -193,24 +189,43 @@ export default class StreamSock {
           if (typeof this.callbackRegister[parsed['@meta']._type] === 'function') {
             this.callbackRegister[parsed['@meta']._type].call(this._config, parsed['@meta']._system)
           } else if (typeof this.callbackRegister[parsed['@meta']._id] === 'function') {
-            this.callbackRegister[parsed['@meta']._id].call(this._config, parsed.message || null)
+            this.callbackRegister[parsed['@meta']._id].call(this._config, parsed.message)
             delete this.callbackRegister[parsed['@meta']._id]
           }
+          this.console(['[RCVD]', parsed.message], 'debug')
+        } else {
+          this.console(['[RCVD]', e.data], 'debug')
         }
-        this.console(['[RCVD]', parsed], 'debug')
       }
       this.connections[connectionId].onclose = e => {
         this.console(['WebSocket closed', e], 'warn')
         if (this.disconnect.indexOf(connectionId) === -1 && typeof this._config.client.keepAlive === 'number' && this._config.client.keepAlive > 0) {
+          if (++this.keepAliveAttempt > this.maxKeepAliveAttempt) {
+            return;
+          }
+          let timeout = this._config.client.keepAlive;
+          if (this.keepAliveAttempt > 5) {
+            timeout = timeout + (timeout/2)
+          } else if (this.keepAliveAttempt > 10) {
+            timeout = timeout*2
+          }
           setTimeout(() => {
             this.console('Attempting to reestablish WebSocket', 'info')
             this.open()
-          }, this._config.client.keepAlive)
+          }, timeout)
         }
         delete this.connections[connectionId]
       }
     }
 
     return connectionId;
+  }
+
+  /**
+   * @param number int
+   */
+  setMaxKeepAliveAttempt(number) {
+    this.maxKeepAliveAttempt = typeof number === 'number' ? number : this.maxKeepAliveAttempt
+    return this
   }
 }
