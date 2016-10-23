@@ -39,7 +39,8 @@ gulp.task('build:js', ()=>
   gulp.src('./src/*.js')
     .pipe(changed('./build', {extension: '.js'}))
     .pipe(babel({
-      presets: ['es2015', 'es2016', 'stage-0']
+      presets: ['es2015', 'es2016', 'stage-0'],
+      plugins: ['transform-es2015-destructuring']
     }))
     .pipe(gulp.dest('./build'))
     .pipe(gulpIf(_sync, browserSync.reload({stream: true})))
