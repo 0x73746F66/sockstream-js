@@ -39,15 +39,7 @@ var StreamSock = function () {
     var defaultPort = 8082;
     var defaultProto = 'wss://';
     var defaultHost = '127.0.0.1';
-    this.callbackRegister = {
-      ping: function ping(message) {
-        _this.send('pong');
-        _this.console(['[PING]', message]);
-      },
-      system: function system(message) {
-        _this.console(['[SYSTEM]', message]);
-      }
-    };
+    this.callbackRegister = { anonymous: {} };
     this.maxKeepAliveAttempt = 20;
     this.keepAliveAttempt = 0;
     this.disconnect = [];
@@ -97,6 +89,13 @@ var StreamSock = function () {
         }
       };
     }
+    this.on('ping', function (message) {
+      _this.send('pong');
+      _this.console(['[PING]', message], 'debug');
+    });
+    this.on('system', function (message) {
+      _this.console(['[SYSTEM]', message], 'info');
+    });
   }
 
   _createClass(StreamSock, [{
@@ -154,14 +153,34 @@ var StreamSock = function () {
     }
 
     /**
+     * listens for a message type from the server
+     * @param {string} type
+     * @param {string|function} cb
+     * @returns {boolean}
+     */
+
+  }, {
+    key: 'on',
+    value: function on(type, cb) {
+      if (typeof cb === 'function') {
+        if (typeof this.callbackRegister[type] === 'undefined') {
+          this.callbackRegister[type] = [cb];
+        } else if (Array.isArray(this.callbackRegister[type])) {
+          this.callbackRegister[type].push(cb);
+        }
+      }
+    }
+
+    /**
+     * sends a message to the server on an open conneciton
      * @param {string} message
      * @param {string|function} cb either define a closure or pass in a connectionId
      * @returns {boolean}
      */
 
   }, {
-    key: 'send',
-    value: function send(message, cb) {
+    key: 'emit',
+    value: function emit(message, cb) {
       var connectionId = this.lastConnectionId;
       if (typeof cb !== 'function' && typeof this.connections[cb] !== 'undefined') {
         this.lastConnectionId = connectionId = cb;
@@ -173,7 +192,7 @@ var StreamSock = function () {
       if (this.connections[connectionId].readyState === this.connections[connectionId].OPEN) {
         var _id = StreamSock.generateUUID();
         if (typeof cb === 'function') {
-          this.callbackRegister[_id] = cb;
+          this.callbackRegister.anonymous[_id] = cb;
         }
         this.connections[connectionId].send(JSON.stringify({
           '@meta': Object.assign({
@@ -191,15 +210,19 @@ var StreamSock = function () {
     /**
      * Opens a new WebSocket connection, it does not over-write existing open connections
      * @param {function} cb
+     * @param {string} connection optional
      * @returns {string} connectionId
      */
 
   }, {
-    key: 'open',
-    value: function open(cb) {
+    key: 'connect',
+    value: function connect(cb, connection) {
       var _this2 = this;
 
-      this.console(['[CONNECTING]', '' + this._config.server.proto + this._config.server.hostname + ':' + this._config.server.port], 'info');
+      if (!connection || typeof connection !== 'string') {
+        connection = '' + this._config.server.proto + this._config.server.hostname + ':' + this._config.server.port;
+      }
+      this.console(['[CONNECTING]', connection], 'info');
       var connectionId = StreamSock.generateUUID();
       this.lastConnectionId = connectionId;
       try {
@@ -222,10 +245,12 @@ var StreamSock = function () {
           var parsed = StreamSock.parseMessage(e.data);
           if (parsed && typeof parsed['@meta'] !== 'undefined') {
             if (typeof _this2.callbackRegister[parsed['@meta']._type] === 'function') {
-              _this2.callbackRegister[parsed['@meta']._type].call(_this2._config, parsed['@meta']._system);
-            } else if (typeof _this2.callbackRegister[parsed['@meta']._id] === 'function') {
-              _this2.callbackRegister[parsed['@meta']._id].call(_this2._config, parsed.message);
-              delete _this2.callbackRegister[parsed['@meta']._id];
+              _this2.callbackRegister[parsed['@meta']._type].forEach(function (fn) {
+                return fn.call(_this2._config, parsed.message);
+              });
+            } else if (typeof _this2.callbackRegister.anonymous[parsed['@meta']._id] === 'function') {
+              _this2.callbackRegister.anonymous[parsed['@meta']._id].call(_this2._config, parsed.message);
+              delete _this2.callbackRegister.anonymous[parsed['@meta']._id];
             }
             _this2.console(['[RCVD]', parsed.message], 'debug');
           } else {
