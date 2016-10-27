@@ -65,7 +65,7 @@ export default class StreamSock {
       }
     }
     this.on('ping', message => {
-      this.send('pong')
+      this.emit('pong')
       this.console(['[PING]', message], 'debug')
     })
     this.on('system', message => {
@@ -197,7 +197,7 @@ export default class StreamSock {
         this.console('connected', 'info')
         this.keepAliveAttempt = 0
         setTimeout(() => {
-          this.send('connecting', cb)
+          this.emit('connecting', cb)
         }, 20)
       }
       this.connections[connectionId].onerror = e => {
@@ -231,7 +231,7 @@ export default class StreamSock {
           }
           setTimeout(() => {
             this.console('Attempting to reestablish WebSocket', 'info')
-            this.open()
+            this.connect(cb, connection)
           }, timeout)
         }
         delete this.connections[connectionId]
