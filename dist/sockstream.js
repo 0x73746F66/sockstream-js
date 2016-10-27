@@ -33,7 +33,7 @@ var StreamSock = function () {
     _classCallCheck(this, StreamSock);
 
     var clientName = 'sockstream.js';
-    var clientVersion = '1.3.3';
+    var clientVersion = '1.4.0';
     var defaultKeepAlive = 800;
     var defaultDebugLevel = 0;
     var defaultPort = 8082;
@@ -90,7 +90,7 @@ var StreamSock = function () {
       };
     }
     this.on('ping', function (message) {
-      _this.send('pong');
+      _this.emit('pong');
       _this.console(['[PING]', message], 'debug');
     });
     this.on('system', function (message) {
@@ -235,7 +235,7 @@ var StreamSock = function () {
           _this2.console('connected', 'info');
           _this2.keepAliveAttempt = 0;
           setTimeout(function () {
-            _this2.send('connecting', cb);
+            _this2.emit('connecting', cb);
           }, 20);
         };
         this.connections[connectionId].onerror = function (e) {
@@ -271,7 +271,7 @@ var StreamSock = function () {
             }
             setTimeout(function () {
               _this2.console('Attempting to reestablish WebSocket', 'info');
-              _this2.open();
+              _this2.connect(cb, connection);
             }, timeout);
           }
           delete _this2.connections[connectionId];
