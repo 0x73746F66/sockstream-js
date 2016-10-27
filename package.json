@@ -1,6 +1,6 @@
 {
   "name": "sockstream",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Provides a standard WebSocket thin manager",
   "main": "src/sockstream.js",
   "scripts": {
