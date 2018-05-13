@@ -10,6 +10,12 @@
     "build": "node_modules/gulp/bin/gulp.js build",
     "prepublish": "node_modules/gulp/bin/gulp.js compress"
   },
+  "standard": {
+    "ignore": [
+      "dist/",
+      "gulpfile.babel.js"
+    ]
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chrisdlangton/sockstream.git"
