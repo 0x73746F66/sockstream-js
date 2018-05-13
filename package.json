@@ -1,10 +1,10 @@
 {
   "name": "sockstream",
   "version": "1.4.1",
-  "description": "Provides a standard WebSocket thin manager",
+  "description": "Provides a standard WebSocket manager",
   "main": "src/sockstream.js",
   "scripts": {
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post",
+    "semantic-release": "npm run build && npm run prepublish && semantic-release pre && npm publish && semantic-release post",
     "lint": "standard --verbose | snazzy",
     "start": "node_modules/gulp/bin/gulp.js",
     "build": "node_modules/gulp/bin/gulp.js build",
@@ -21,12 +21,11 @@
     "tcp",
     "manager"
   ],
-  "author": "Christopher Langton <chrislangton84@gmail.com>",
+  "author": "Christopher Langton <chris@langton.cloud>",
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/chrisdlangton/sockstream/issues"
   },
-  "homepage": "https://github.com/chrisdlangton/sockstream#readme",
   "devDependencies": {
     "babel-cli": "^6.16.0",
     "babel-core": "^6.17.0",
